@@ -1,0 +1,12 @@
+{
+ "test": {
+  "mean_error_palm": 0.3368,
+  "median_error_palm": 0.1873,
+  "pck_0.2_palm": 0.5261,
+  "pck_0.4_palm": 0.7699,
+  "pinch_distance_error_palm": 0.3649,
+  "presence_accuracy": 0.9892
+ },
+ "parameters": 110806,
+ "note": "Errors are relative to palm length (wrist to middle knuckle). Test = FreiHAND evaluation + RHD evaluation, unseen in training."
+}

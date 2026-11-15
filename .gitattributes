@@ -1,0 +1,7 @@
+# Byte-exact files: hashes and tests check these, so Git must never change their line endings.
+vendor/** -text
+samples/** -text
+models/** -text
+*.apk binary
+*.wasm binary
+*.task binary

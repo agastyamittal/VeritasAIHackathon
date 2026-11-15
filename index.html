@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="public/aeroform-icon.svg" type="image/svg+xml">
+  <title>AEROWAY · Environmental design lab</title>
+  <link rel="stylesheet" href="styles.css?v=12">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="AEROWAY home">AEROWAY</a>
+      <div class="top-actions">
+        <button id="help-btn" class="quiet desktop-only">Help</button>
+        <button id="analysis-top-btn" class="quiet desktop-only" aria-haspopup="dialog">Analysis</button>
+        <button id="vr-btn" class="vr" data-scene disabled>Phone VR <span aria-hidden="true">◉</span></button>
+        <button id="panel-btn" class="menu-btn mobile-only" aria-expanded="false" aria-controls="sidebar" aria-label="Open menu"><span aria-hidden="true"></span></button>
+      </div>
+    </header>
+    <button id="panel-backdrop" class="panel-backdrop" aria-label="Close menu" hidden></button>
+    <aside class="sidebar" id="sidebar" aria-label="Building controls">
+      <div class="panel-heading mobile-only"><button id="close-panel" class="close-panel" aria-label="Close menu">×</button></div>
+
+      <section class="side-section" aria-label="View">
+        <div class="radio-list" role="group" aria-label="View mode">
+          <button class="radio" data-view="interior" data-scene disabled aria-pressed="true"><span>Interior</span><span class="radio-dot" aria-hidden="true"></span></button>
+          <button class="radio" data-view="exterior" data-scene disabled aria-pressed="false"><span>Exterior</span><span class="radio-dot" aria-hidden="true"></span></button>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <button id="conditions-btn" class="sim-card" aria-haspopup="dialog">
+          <b id="conditions-summary">Mild · 18 °C · wind W 4 m/s</b>
+          <small>Weather for the simulation · edit</small>
+        </button>
+        <button id="analysis-btn" class="sim-card analysis-card" aria-haspopup="dialog">
+          <b id="analysis-summary">Simulating…</b>
+          <small>Room temperatures, heat loss, airflow, energy, CO₂e · improvements</small>
+        </button>
+      </section>
+
+      <section class="side-section upload-card">
+        <input id="local-upload" type="file" hidden>
+        <input id="design-upload" type="file" hidden>
+        <button id="local-btn" class="upload-action"><span><b>Open from computer</b><small>View an STL or OBJ here only</small></span><i aria-hidden="true">↥</i></button>
+        <button id="upload-btn" class="upload-action primary"><span><b>Upload to phone</b><small>Saves any file to the cloud for your phone</small></span><i aria-hidden="true">↑</i></button>
+        <div class="pipeline-state" role="status"><div><b id="upload-title">Demo building loaded</b><small id="upload-description">STL and OBJ models open in 3D and VR. Other files are stored only.</small></div></div>
+        <p id="upload-error" class="error-copy" role="alert" hidden></p>
+      </section>
+
+      <details class="side-section cloud-card" open>
+        <summary><span class="section-title">On your phone · cloud</span></summary>
+        <div class="cloud-heading"><p id="cloud-status" class="cloud-status" role="status">Checking cloud…</p><button id="cloud-refresh" class="cloud-refresh" aria-label="Refresh cloud files">Refresh</button></div>
+        <ul id="cloud-list" class="cloud-list"></ul>
+        <button id="demo-btn" class="cloud-demo" hidden>Show demo house</button>
+      </details>
+
+      <details class="side-section demo-models" open>
+        <summary><span class="section-title">Demo 3D models</span></summary>
+        <p id="demo-models-status" class="cloud-status" role="status">Built in, no download. Open one, then try Phone VR.</p>
+        <ul id="demo-models" class="cloud-list"></ul>
+      </details>
+
+      <details class="side-section controls-card" open>
+        <summary><span class="section-title">Layers &amp; hand tracking</span></summary>
+        <button class="layer active" data-layer="architecture" data-scene disabled aria-pressed="true"><span><b>Architecture</b><small>Spaces, materials &amp; systems</small></span><i aria-hidden="true">✓</i></button>
+        <button class="layer" data-layer="airflow" data-scene disabled aria-pressed="false"><span><b>Airflow</b><small>HVAC jets and fresh air per room · simulated</small></span><i aria-hidden="true">+</i></button>
+        <button class="layer" data-layer="thermal" data-scene disabled aria-pressed="false"><span><b>Thermal</b><small>Room temperatures · simulated</small></span><i aria-hidden="true">+</i></button>
+        <button class="layer" data-layer="heatloss" data-scene disabled aria-pressed="false"><span><b>Heat loss</b><small>Heat flow through walls, windows and roof · simulated</small></span><i aria-hidden="true">+</i></button>
+        <button class="layer" id="hands-btn" data-scene disabled aria-pressed="false"><span><b>Hand tracking</b><small id="hands-status">Pinch to select what the center mark points at</small></span><i aria-hidden="true">+</i></button>
+        <button class="layer" id="reset-moves-btn"><span><b>Reset moved items</b><small>Put grabbed AC units and vents back</small></span><i aria-hidden="true">↺</i></button>
+        <button class="layer" id="hand-dev-open"><span><b>Hand tracking dev view</b><small>Camera, landmarks and live numbers</small></span><i aria-hidden="true">›</i></button>
+      </details>
+
+      <details class="side-section controls-card" open>
+        <summary><span class="section-title">Phone VR</span></summary>
+        <p class="side-note">In VR there are no buttons: hand tracking and clap listening start by themselves. Thumbs up / down changes floor; 1, 2, 3 or 4 fingers pick Thermal, Airflow, Heat loss or Architecture; an open hand walks forward; pinch grabs or selects; a clap recenters. Press the headset's Back button (Esc on a computer) to leave VR.</p>
+        <button class="layer" id="lens-fit-btn" data-scene disabled><span><b>Lens fit</b><small>Opens VR with the lens settings and alignment target</small></span><i aria-hidden="true">›</i></button>
+        <button class="layer" id="vr-walk-btn" aria-pressed="true"><span><b>Walk in VR</b><small id="vr-walk-status">On · step in place or walk to move forward</small></span><i aria-hidden="true">✓</i></button>
+      </details>
+
+      <p class="sidebar-foot"><button id="menu-help-btn" class="link-btn mobile-only">Help</button></p>
+    </aside>
+    <main class="viewport-wrap">
+      <canvas id="viewport" aria-label="Interactive 3D house. Drag to rotate, pinch or scroll to zoom." tabindex="0"></canvas>
+      <div class="view-label"><b id="layer-label">Architecture</b></div>
+      <div id="load-panel" class="load-panel" role="status"><h2 id="load-title">Opening the house…</h2><p id="load-message">Preparing the 3D scene.</p><button id="retry-btn" class="vr" hidden>Retry viewer</button></div>
+      <div class="floor-nav" aria-label="Floor selection"><button data-floor="all" data-scene disabled class="active" aria-pressed="true">All</button><button data-floor="1" data-scene disabled aria-pressed="false">01</button><button data-floor="2" data-scene disabled aria-pressed="false">02</button><button id="reset-btn" data-scene disabled aria-label="Reset camera">↺</button></div>
+      <div class="simulation-note" id="simulation-note" hidden><span>✦</span><p><b>Simplified physics estimate</b><br>Not EnergyPlus, CFD or AI. Open Analysis for the inputs and assumptions.</p></div>
+      <div class="bottom-dock">
+        <div class="legend" id="legend"><span id="legend-label">Atrium House · 2 floors</span></div>
+        <div class="dock-buttons"><button id="conditions-pill" class="conditions-pill" aria-haspopup="dialog"><span class="pill-label">Weather conditions</span><span id="conditions-pill-summary">Mild · 18 °C</span></button><button id="analysis-pill" class="analysis-pill" aria-haspopup="dialog" aria-label="Environmental analysis">Analysis</button></div>
+        <div class="scene-meta"><span id="scene-status" role="status"></span></div>
+      </div>
+    </main>
+  </div>
+  <div class="hand-preview" id="hand-preview" hidden><video id="hand-video" muted playsinline></video><canvas id="hand-overlay" width="160" height="120" aria-hidden="true"></canvas></div>
+  <section id="hand-dev" class="hand-dev" aria-label="Hand tracking dev view" hidden>
+    <div class="hand-dev-head"><b>Hand dev view</b><span id="hand-dev-state" class="dev-state">off</span><button id="hand-dev-close" class="close-panel" aria-label="Close hand dev view">×</button></div>
+    <canvas id="hand-dev-canvas" width="320" height="240" aria-label="Camera image with detected hand landmarks"></canvas>
+    <p id="hand-dev-hint" class="hand-dev-hint" role="status">Press Start tracking.</p>
+    <div class="hand-dev-actions"><button id="hand-dev-toggle">Start tracking</button><button id="hand-dev-camera">Camera: rear</button></div>
+    <dl class="hand-dev-stats">
+      <div><dt>Status</dt><dd id="hd-status">off</dd></div>
+      <div><dt>Camera</dt><dd id="hd-camera">–</dd></div>
+      <div><dt>Video</dt><dd id="hd-video">–</dd></div>
+      <div><dt>Model</dt><dd id="hd-model">–</dd></div>
+      <div><dt>Detection</dt><dd id="hd-fps">–</dd></div>
+      <div><dt>Hand</dt><dd id="hd-hand">–</dd></div>
+      <div><dt>Walk</dt><dd id="hd-walk">–</dd></div>
+      <div><dt>Grab</dt><dd id="hd-grab">–</dd></div>
+      <div class="wide"><dt>Sign <small>(hold about half a second)</small></dt><dd><span class="bar sign"><span id="hd-sign-bar"></span></span><output id="hd-sign">–</output></dd></div>
+      <div class="wide"><dt>Pinch ratio <small>(pinch &lt; 0.30, release &gt; 0.45)</small></dt><dd><span class="bar pinch"><span id="hd-pinch-bar"></span><i class="mark enter"></i><i class="mark exit"></i></span><output id="hd-pinch">–</output></dd></div>
+    </dl>
+    <div class="hand-dev-gestures"><p class="section-title">Trained gesture model</p><div class="hd-gesture"><span>Open palm · walk</span><span class="bar"><span id="hd-g-open_palm"></span></span><output id="hd-gv-open_palm">–</output></div><div class="hd-gesture"><span>Fist</span><span class="bar"><span id="hd-g-fist"></span></span><output id="hd-gv-fist">–</output></div><div class="hd-gesture"><span>1 finger · thermal</span><span class="bar"><span id="hd-g-point"></span></span><output id="hd-gv-point">–</output></div><div class="hd-gesture"><span>2 fingers · airflow</span><span class="bar"><span id="hd-g-two_fingers"></span></span><output id="hd-gv-two_fingers">–</output></div><div class="hd-gesture"><span>3 fingers · heat loss</span><span class="bar"><span id="hd-g-three_fingers"></span></span><output id="hd-gv-three_fingers">–</output></div><div class="hd-gesture"><span>4 fingers · architecture</span><span class="bar"><span id="hd-g-four_fingers"></span></span><output id="hd-gv-four_fingers">–</output></div><div class="hd-gesture"><span>Thumbs up · floor up</span><span class="bar"><span id="hd-g-thumbs_up"></span></span><output id="hd-gv-thumbs_up">–</output></div><div class="hd-gesture"><span>Thumbs down · floor down</span><span class="bar"><span id="hd-g-thumbs_down"></span></span><output id="hd-gv-thumbs_down">–</output></div><div class="hd-gesture"><span>OK</span><span class="bar"><span id="hd-g-ok"></span></span><output id="hd-gv-ok">–</output></div><div class="hd-gesture"><span>Other</span><span class="bar"><span id="hd-g-other"></span></span><output id="hd-gv-other">–</output></div></div>
+    <div class="hand-dev-clap"><p class="section-title">Clap to recenter</p>
+      <label class="hd-clap-slider" for="clap-sensitivity"><span>Sensitivity</span><input id="clap-sensitivity" type="range" min="0" max="100" step="1" value="45"><output id="clap-sensitivity-value" for="clap-sensitivity">45</output></label>
+      <div class="hd-clap-meter"><span class="bar clap"><span id="hd-clap-bar"></span><i id="hd-clap-mark" class="mark"></i></span><output id="hd-clap">microphone off</output></div>
+      <p class="hd-clap-note">Lower it if talking, taps or bumps recenter the view; raise it if claps are missed. The bar is the loudest recent sound; a clap has to pass the white line. Saved on this phone.</p>
+      <button id="hd-clap-test">Test microphone</button>
+    </div>
+    <p class="section-title">Events</p>
+    <ol id="hand-dev-log" class="hand-dev-log"></ol>
+  </section>
+  <div id="stereo-hud" class="stereo-hud" hidden>
+    <span class="eye-label left">Left eye</span><span class="eye-label right">Right eye</span>
+    <p id="rotate-hint">Rotate your phone to landscape</p>
+    <div class="vr-actions"><button id="alignment-btn" hidden>Back to lens fit</button></div>
+    <p id="alignment-note" hidden>Adjust Lens fit until the two center marks overlap through your headset.</p>
+    <p id="motion-status" role="status">Drag to look around</p>
+  </div>
+  <dialog id="conditions-modal" aria-labelledby="conditions-title">
+    <button class="close" id="close-conditions" aria-label="Close weather conditions">×</button>
+    <h2 id="conditions-title">Weather conditions</h2>
+    <div class="season-grid" role="group" aria-label="Season preset"><button data-season="summer" aria-pressed="false">Summer heat</button><button data-season="mild" aria-pressed="true">Mild</button><button data-season="winter" aria-pressed="false">Winter cold</button></div>
+    <label class="condition-row" for="cond-temperature">Outdoor temperature <output id="cond-temperature-value" for="cond-temperature">18 °C</output><input id="cond-temperature" type="range" min="-20" max="45" step="1" value="18"></label>
+    <label class="condition-row" for="cond-wind-speed">Wind speed <output id="cond-wind-speed-value" for="cond-wind-speed">4 m/s</output><input id="cond-wind-speed" type="range" min="0" max="15" step="1" value="4"></label>
+    <div class="condition-row"><span>Wind from</span><div class="wind-grid" role="group" aria-label="Wind direction"><button data-wind="N" aria-pressed="false">N</button><button data-wind="E" aria-pressed="false">E</button><button data-wind="S" aria-pressed="false">S</button><button data-wind="W" aria-pressed="true">W</button></div></div>
+    <p class="lens-tip">These drive the simplified heat-balance simulation (Thermal, Heat loss and Airflow layers, and Analysis). The temperature is the daily mean; the day uses clear-sky sunshine for the season.</p>
+    <div class="lens-buttons"><button id="conditions-done" class="vr">Done</button><button id="conditions-analysis" class="quiet">Open analysis</button></div>
+  </dialog>
+  <dialog id="analysis-modal" class="analysis" aria-labelledby="analysis-title">
+    <button class="close" id="close-analysis" aria-label="Close analysis">×</button>
+    <h2 id="analysis-title">How this building performs</h2>
+    <p id="analysis-provenance" class="analysis-sub"></p>
+    <div class="segmented analysis-season" role="group" aria-label="Design day"><button data-analysis-season="current" class="active" aria-pressed="true">Today</button><button data-analysis-season="winter" aria-pressed="false">Winter</button><button data-analysis-season="mild" aria-pressed="false">Mild</button><button data-analysis-season="summer" aria-pressed="false">Summer</button></div>
+    <div class="analysis-kpis">
+      <div><span>Electricity</span><b id="ak-electric">–</b><small>kWh per day</small></div>
+      <div><span>CO₂e</span><b id="ak-co2">–</b><small>kg per day</small></div>
+      <div><span>Comfort</span><b id="ak-comfort">–</b><small id="ak-comfort-note">rooms comfortable</small></div>
+    </div>
+    <p id="analysis-eplus" class="analysis-sub" hidden></p>
+
+    <h3>Rooms</h3>
+    <div id="analysis-plan" class="analysis-plan"></div>
+    <div class="plan-legend" aria-hidden="true"><span><i class="sw cold"></i>colder than comfort</span><span><i class="sw ok"></i>comfortable</span><span><i class="sw hot"></i>hotter</span><span><i class="sw ac"></i>AC</span><span><i class="sw vent"></i>vent</span><span><i class="sw win"></i>window</span></div>
+
+    <div class="chart-head"><h3>Temperature through the day</h3><div class="segmented chart-floor" role="group" aria-label="Floor"><button data-chart-floor="1" class="active" aria-pressed="true">Floor 1</button><button data-chart-floor="2" aria-pressed="false">Floor 2</button></div></div>
+    <p id="analysis-readout" class="chart-readout" role="status"></p>
+    <div id="analysis-chart" class="analysis-chart"></div>
+
+    <h3 id="analysis-flows-title">Biggest heat leaks</h3>
+    <div id="analysis-flows" class="bar-list"></div>
+
+    <h3>What to fix</h3>
+    <ul id="analysis-findings" class="findings"></ul>
+
+    <div class="lens-buttons"><button id="analysis-optimize" class="vr">Find improvements</button></div>
+    <div id="analysis-improvements"></div>
+
+    <details class="analysis-more">
+      <summary>Change the design</summary>
+      <div class="analysis-design">
+        <label>Windows<select id="design-windows"></select></label><label>Walls<select id="design-walls"></select></label>
+        <label>Roof<select id="design-roof"></select></label><label>Ground floor<select id="design-floor"></select></label>
+        <label>Air tightness<select id="design-airtightness"></select></label><label>Ventilation<select id="design-heatRecovery"></select></label>
+        <label>AC units<select id="design-acSize"></select></label>
+        <label>Heating setpoint (°C)<input id="design-heatSetpoint" type="number" min="15" max="24" step="0.5"></label>
+        <label>Cooling setpoint (°C)<input id="design-coolSetpoint" type="number" min="22" max="30" step="0.5"></label>
+        <label>Grid CO₂e (kg/kWh)<input id="design-gridKgPerKWh" type="number" min="0" max="1.5" step="0.01"></label>
+        <label>Latitude (°)<input id="design-latitude" type="number" min="-66" max="66" step="1"></label>
+      </div>
+      <p class="lens-tip">Grab an AC unit or vent in VR to move it; the analysis follows its new room.</p>
+      <div class="lens-buttons"><button id="analysis-baseline" class="quiet">Save as baseline</button><button id="analysis-reset-design" class="quiet">Reset design</button></div>
+      <div id="analysis-compare"></div>
+    </details>
+  </dialog>
+  <dialog id="lens-modal" aria-labelledby="lens-title">
+    <button class="close" id="close-lens" aria-label="Close lens fit">×</button>
+    <h2 id="lens-title">Line up your lenses.</h2>
+    <p>Auto calculates the alignment for your phone and headset. Choose Manual to fine-tune it. Center the phone in the headset before checking the alignment target.</p>
+    <div class="segmented lens-mode" role="group" aria-label="Lens fit mode"><button id="lens-mode-auto" class="active" aria-pressed="true">Auto · calculated</button><button id="lens-mode-manual" aria-pressed="false">Manual</button></div>
+    <div id="lens-auto-details" class="lens-auto-details">
+      <dl><div><dt>Lens spacing</dt><dd id="lens-auto-spacing"></dd></div><div><dt>Image centers</dt><dd id="lens-auto-centers"></dd></div><div><dt>View diameter</dt><dd id="lens-auto-size"></dd></div><div><dt>Landscape screen</dt><dd id="lens-auto-screen"></dd></div></dl>
+      <p>Alignment and view size scale with your screen resolution. Lens correction uses a starting preset; Manual lets you refine it. Your saved manual fit is kept separately.</p>
+    </div>
+    <div id="lens-manual-controls" class="lens-controls" hidden>
+      <label for="lens-spacing">Lens spacing <output id="lens-spacing-value" for="lens-spacing"></output><input id="lens-spacing" type="range" min="55" max="72" step="0.5" value="62"></label>
+      <label for="lens-height">Vertical position <output id="lens-height-value" for="lens-height"></output><input id="lens-height" type="range" min="-6" max="6" step="0.5" value="0"></label>
+      <label for="lens-size">View size <output id="lens-size-value" for="lens-size"></output><input id="lens-size" type="range" min="75" max="100" step="0.1" value="94"></label>
+      <label for="lens-fov">Field of view <output id="lens-fov-value" for="lens-fov"></output><input id="lens-fov" type="range" min="70" max="105" step="1" value="90"></label>
+      <label for="lens-distortion">Lens correction <output id="lens-distortion-value" for="lens-distortion"></output><input id="lens-distortion" type="range" min="0" max="50" step="1" value="22"></label>
+      <label for="lens-depth">3D depth <output id="lens-depth-value" for="lens-depth"></output><input id="lens-depth" type="range" min="0" max="100" step="5" value="100"></label>
+    </div>
+    <p id="lens-manual-note" class="lens-tip" hidden>Start with Lens spacing. If the house still looks doubled after alignment, reduce 3D depth. At 0%, both eyes show the same viewpoint. Keep settings that give you a clear, comfortable image.</p>
+    <div class="lens-buttons"><button id="lens-target" class="vr">Show alignment target</button><button id="lens-reset" class="quiet" hidden>Use calculated values</button><button id="lens-done" class="quiet">Done</button></div>
+    <p class="lens-save">Your fit is saved on this phone when local storage is available.</p>
+  </dialog>
+  <dialog id="vr-guide" class="vr-guide" aria-labelledby="vr-guide-title">
+    <h2 id="vr-guide-title">Control it with your hand.</h2>
+    <p class="vr-guide-lead">Hold each sign in front of the phone's rear camera for about half a second.</p>
+    <ul class="vr-guide-signs">
+      <li><span aria-hidden="true">👍</span><b>Thumbs up</b><small>Up a floor</small></li>
+      <li><span aria-hidden="true">👎</span><b>Thumbs down</b><small>Down a floor</small></li>
+      <li><span class="count" aria-hidden="true">1</span><b>1 finger</b><small>Thermal</small></li>
+      <li><span class="count" aria-hidden="true">2</span><b>2 fingers</b><small>Airflow</small></li>
+      <li><span class="count" aria-hidden="true">3</span><b>3 fingers</b><small>Heat loss</small></li>
+      <li><span class="count" aria-hidden="true">4</span><b>4 fingers</b><small>Architecture (thumb tucked)</small></li>
+      <li><span aria-hidden="true">✋</span><b>Open hand, held out</b><small>Walk forward</small></li>
+      <li><span aria-hidden="true">🤏</span><b>Pinch</b><small>Grab or select</small></li>
+      <li><span aria-hidden="true">✊</span><b>Fist, then open</b><small>Outside / back in</small></li>
+      <li><span aria-hidden="true">👏</span><b>Clap</b><small>Recenter the view</small></li>
+      <li><span aria-hidden="true">↩</span><b>Headset Back</b><small>Leave VR (Esc on a computer)</small></li>
+    </ul>
+    <p class="vr-guide-note">The camera and microphone are on only while you are in VR. Sound is analysed on the phone and never recorded. Clap or tap Start to close this.</p>
+    <div class="vr-guide-buttons"><label><input type="checkbox" id="vr-guide-skip"> Don't show again</label><button id="vr-guide-ok" class="vr">Start</button></div>
+  </dialog>
+  <dialog id="help-modal" aria-labelledby="help-title"><button class="close" id="close-help" aria-label="Close help">×</button><h2 id="help-title">Step into the design.</h2><p>Drag to rotate the house. Scroll or pinch to zoom. On a phone, the ☰ menu holds views, uploads, cloud files, layers and hand tracking.</p><p><b>Upload to phone</b> saves a file to the cloud; open the menu on your phone and tap it under Cloud. STL and OBJ files open in 3D and VR.</p><p><b>Phone VR</b> opens two eye views with no buttons; you control it with hand signs held in front of the phone's rear camera for about half a second, and a clap. Hand tracking and the microphone start when you enter and stop when you leave (sound is analysed on the phone, never recorded). <b>Thumbs up / down</b>: up / down a floor. <b>1 finger</b>: thermal. <b>2 fingers</b>: airflow. <b>3 fingers</b>: heat loss. <b>4 fingers</b> (thumb tucked): architecture. <b>Open hand</b> held out: walk forward. <b>Pinch</b>: grab or select. <b>Fist then open hand</b>: go outside / back in. <b>Clap</b>: recenter the view. Leave VR with the headset's Back button, or Escape on a computer. The signs for floors and layers also work outside VR. Lens fit and Walk are in the menu under Phone VR.</p><p>Keyboard: <b>1</b> cutaway, <b>2</b> exterior, <b>R</b> reset view, <b>Escape</b> close VR or panels.</p><p class="body-copy">Airflow, thermal and heat-loss layers come from the simplified heat simulation, driven by Weather conditions; Analysis also shows an estimate from a model trained on EnergyPlus.</p></dialog>
+  <noscript><div class="noscript">Enable JavaScript to explore the 3D house.</div></noscript>
+  <script type="module" src="app.js?v=12"></script>
+</body>
+</html>

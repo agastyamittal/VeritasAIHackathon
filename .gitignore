@@ -1,0 +1,10 @@
+.apk-build/
+node_modules/
+test-results/
+*.log
+releases/*.idsig
+training/data/
+
+# Only the current Android build goes to GitHub; older copies stay local.
+releases/*.apk
+!releases/AEROFORM-debug.apk
